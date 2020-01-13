@@ -10,3 +10,4 @@ version.txt
 SampleFolder/A.txt
 SampleFolder/fciv.exe
 config-dev.ini
+.gitignore

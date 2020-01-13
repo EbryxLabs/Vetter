@@ -141,8 +141,7 @@ def getScanReports(vtObj, dir):
 			for line in fileObj:
 				hash = line.split(";")[0]
 				response = vtObj.get_file_report(hash)
-
-
+				
 
 def sanityCheck(args):
 	''' Check for the sanity of all arguments passed '''

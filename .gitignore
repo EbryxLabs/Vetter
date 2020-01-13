@@ -1,13 +1,7 @@
-DESKTOP-AJU6QA3-md5-hashes.txt
-DESKTOP-AJU6QA3-sha1-hashes.txt
-DESKTOP-AJU6QA3-sha256-hashes.txt
-hasher.py
-hashes.txt
-requirements.txt
 sample.py
+hasher.py
 testVT.py
-version.txt
-SampleFolder/A.txt
-SampleFolder/fciv.exe
+*.txt
+*.exe
 config-dev.ini
 .gitignore

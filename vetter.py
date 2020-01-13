@@ -13,6 +13,7 @@ Date: 10-01-2020
 # Library imports
 import os
 import requests
+import time
 import hashlib
 import platform
 import configparser
@@ -61,6 +62,7 @@ def calculateHashes(hashingAlgos, files):
 		if algoName == "md5":
 			for aFile in files:
 				calcHash = calculateBlockHash(processFile(aFile), hashlib.md5())
+				# Format: File Name, Hash
 				md5hash.append((aFile.split('\\')[-1], calcHash))
 			print("[+] MD5 hashes calculated.")
 	
@@ -105,10 +107,13 @@ def getHashFiles(dir, extensions):
 	hashFiles = []
 
 	for root, dirs, files in os.walk(dir):
-		for file in files:	
-			fileName, fileExt = file.split(".")
-			if fileName.startswith("DESKTOP") and fileExt in extensions:
-				hashFiles.append(file)
+		for file in files:
+			try:
+				fileName, fileExt = file.split(".")
+				if fileName.startswith("vetter") and fileExt in extensions:
+					hashFiles.append(file)
+			except:
+				print(f"[-] Error processing file: {file}")
 
 	return hashFiles
 
@@ -133,15 +138,23 @@ def getScanReports(vtObj, dir):
 	extensions = ['txt']
 	hashFiles = getHashFiles(dir, extensions)
 	if not hashFiles:
+		# TODO Add this argument support
 		print("[-] No files found to match hashes from. Please use the '--files' argument to specify your files or rename them with 'vetter'")
 		exit()
+
+	scanCount = 1
 
 	for file in hashFiles:
 		with open(file, 'r') as fileObj:
 			for line in fileObj:
 				hash = line.split(";")[0]
+				# TODO Add generator support! (or Async calls for faster execution)
 				response = vtObj.get_file_report(hash)
-				
+				print(json.dumps(response['results'], sort_keys=False, indent=4))
+				if scanCount%4 == 0:
+					time.sleep(60)
+
+				scanCount += 1	
 
 def sanityCheck(args):
 	''' Check for the sanity of all arguments passed '''
@@ -163,6 +176,7 @@ def sanityCheck(args):
 def parseArgs():
 	''' Parse arguments from command line '''
 
+	# TODO Add files support for hash files
 	ap = argparse.ArgumentParser()
 	ap.add_argument("--dir", metavar="Directory to scan", required=True, help="Starting point (./)")
 	ap.add_argument("--config", metavar="Configuration file", default="config-dev.ini", help="Configuration file for VT (config.ini)")
@@ -201,7 +215,7 @@ def processModes(args):
 	
 	elif mode == "both":
 		processHashMode(args)
-		processVtMode(args['config'])
+		processVtMode(args['dir'], args['config'])
 
 def setupVt(config):
 	'''Initialize the VirusTotal Public API Object'''

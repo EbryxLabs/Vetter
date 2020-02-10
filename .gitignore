@@ -1,7 +1,0 @@
-sample.py
-hasher.py
-testVT.py
-*.txt
-*.exe
-config-dev.ini
-.gitignore

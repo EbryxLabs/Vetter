@@ -18,8 +18,13 @@ Here's an excellent article covering just that (by VT itself): [VirusTotal APIs]
 
 3. Install all dependencies using the requirements.txt file. Here's how:
 
+Windows:
 ```
 pip install -r requirements.txt
+```
+Linux: 
+```
+pip3 install -r requirements.txt
 ```
 
 3. Once you've signed up for the API, insert the API_KEY into the config.ini file which is provided along with the cloned script. As an example:
@@ -31,8 +36,13 @@ apiKey = YYYYXXXXZZZZ
 
 4. Start-up the script using:
 
+Windows:
 ```
 python vetter.py -h
+```
+Linux: 
+```
+python3 vetter.py -h
 ```
 
 ### Few Usecases

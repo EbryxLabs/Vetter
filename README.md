@@ -51,7 +51,9 @@ Needs coverage.
 
 ## Tested
 
-Currently only tested on Windows 10 Pro.
+Tested on:
+1. Windows 10 Pro
+2. Ubuntu 18.04 
 
 ## Contributing
 

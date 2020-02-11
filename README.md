@@ -60,7 +60,7 @@ optional arguments:
   --config Configuration file
                         Configuration file for VT (config.ini)
   --algo Algorithms to use
-                        Hashing algorithms [MD5*, SHA1, SHA256]
+                        Hashing algorithms [MD5, SHA1, SHA256*]
   --mode Mode of operations [hash/scan/both]
                         Calculate hashes, scan hashes on VT, or both
 
@@ -86,6 +86,11 @@ python vetter.py --dir ./ --mode both
 4. Specify the configuration file if you're not using the standard file provided with the script
 ```
 python vetter.py --dir ./ --mode both --config config-prod.ini
+```
+
+5. Specify the hashing function you'd like to use by specifying it in a CSV format:
+```
+python vetter.py --dir ./ --mode scan --algo md5,sha1
 ```
 
 ## Tested

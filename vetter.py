@@ -302,7 +302,7 @@ def parseArgs():
 	ap.add_argument("--dir", metavar="Directory to scan", required=True, help="Starting point (./)")
 	ap.add_argument("--config", metavar="Configuration file", default="config.ini", help="Configuration file for VT (config.ini)")
 	ap.add_argument("--algo", metavar="Algorithms to use", default="SHA256", help="Hashing algorithms [MD5*, SHA1, SHA256]")
-	ap.add_argument("--mode", metavar="Mode of operations [hash/scan/auto]", required=True, help="Calculate hashes, scan hashes on VT, or both")
+	ap.add_argument("--mode", metavar="Mode of operations [hash/scan/both]", required=True, help="Calculate hashes, scan hashes on VT, or both")
 	args = vars(ap.parse_args())
 	return args
 

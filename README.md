@@ -47,7 +47,46 @@ python3 vetter.py -h
 
 ### Few Usecases
 
-Needs coverage.
+Here's a list of commands you can use to get started with Vetter:
+```
+D:\EbryxLabs\vetter-py>python vetter.py -h
+usage: vetter.py [-h] --dir Directory to scan [--config Configuration file] [--algo Algorithms to use] --mode Mode of
+                 operations [hash/scan/both]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --dir Directory to scan
+                        Starting point (./)
+  --config Configuration file
+                        Configuration file for VT (config.ini)
+  --algo Algorithms to use
+                        Hashing algorithms [MD5*, SHA1, SHA256]
+  --mode Mode of operations [hash/scan/both]
+                        Calculate hashes, scan hashes on VT, or both
+
+```
+
+At the moment, Vetter provides three options. 
+
+1. You can calculate the hashes for files in the input directory
+```
+python vetter.py --dir ./ --mode hash
+```
+
+2. You can search the calculated hashes or any of your own hash files against VirusTotal's APIs (it uses PublicAPIV3)
+```
+python vetter.py --dir ./ --mode scan
+```
+
+3. You can do both these steps at once using the "both" mode
+```
+python vetter.py --dir ./ --mode both
+```
+
+4. Specify the configuration file if you're not using the standard file provided with the script
+```
+python vetter.py --dir ./ --mode both --config config-prod.ini
+```
 
 ## Tested
 

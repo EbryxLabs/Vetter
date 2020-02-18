@@ -3,8 +3,8 @@ Name: Vetter
 Description: Calculate hashes from a given directory and check against VT's databases
 
 Author: Ebryx
-Version: 0.1
-Date: 10-01-2020
+Version: 0.2
+Date: 18-02-2020
 
 '''
 

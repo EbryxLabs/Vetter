@@ -34,13 +34,13 @@ def saveVtResults(vtResults):
 		fileObj = open(f'vetter-results-{currTime}.json', 'a+')
 		print(jsonResult, file=fileObj)
 
-def getFiles(dir):
+def getFiles(directory):
 	'''Return the files in the current directory and all its child directories'''
 
 	targetFiles = []
 	fileCount = 0
 
-	for root, dirs, files in os.walk(dir):
+	for root, dirs, files in os.walk(directory):
 		
 		for file in files:
 			fileName = os.path.abspath(os.path.join(root, file))
@@ -62,12 +62,12 @@ def saveHashes(hashes, mode):
 			record = str(aHash[1]) + " ; " + str(aHash[0]) + " \n"
 			fileObj.write(record)
 
-# VirusTotal Scans
+# VirusTotal Search
 
-def processVtMode(dir, config):
+def processVtMode(directory, config):
 
 	vt = setupVt(config)
-	outputs = getScanReports(vt, dir)
+	outputs = getSearchReports(vt, directory)
 
 def setupVt(config):
 	'''Initialize the VirusTotal Public API Object'''
@@ -92,16 +92,16 @@ def returnApiKey(configFile):
 
 	return vtApiKey
 
-def getScanReports(vtObj, dir):
+def getSearchReports(vtObj, directory):
 
 	extensions = ['txt']
-	hashFiles = getHashFiles(dir, extensions)
+	hashFiles = getHashFiles(directory, extensions)
 	if not hashFiles:
 		# TODO Add this argument support
 		print("[-] No files found to match hashes from. Please use the '--files' argument to specify your files or rename them with 'vetter'")
 		exit()
 
-	scanCount = 1
+	searchCount = 1
 	vtOutputs = []
 	hashLength = (32, 40, 64)
 
@@ -112,27 +112,32 @@ def getScanReports(vtObj, dir):
 					continue
 
 				hash = line.split(";")[0].rstrip(" ")
+				fileName = line.split(";")[1].lstrip(" ").rstrip(" \n")
 				if len(hash) not in hashLength:
 					print(f"[-] Unable to process hash: {hash}")
 					continue
 
 				# TODO: Add generator support! (or async calls for faster execution)
 				response = vtObj.get_file_report(hash)
-				vtOutputs.append(response)
-				if scanCount%4 == 0:
+				compResponse = {
+					'response': response,
+					'file_name': fileName
+				}	
+				vtOutputs.append(compResponse)
+				if searchCount%4 == 0:
 					analyzeVtOutput(vtOutputs)
 					vtOutputs = []
 					print("[+] Cool down time to stay within assigned quota!")
 					time.sleep(60)
 
-				scanCount += 1	
+				searchCount += 1	
 
-def getHashFiles(dir, extensions):
+def getHashFiles(directory, extensions):
 
 	hashFiles = []
 	fileMatchKeywords = ['vetter', 'md5', 'sha1', 'sha-1', 'sha-256', 'sha256']
 
-	for root, dirs, files in os.walk(dir):
+	for root, dirs, files in os.walk(directory):
 		for file in files:
 			try:
 				fileName, fileExt = file.split(".")
@@ -153,29 +158,33 @@ def analyzeVtOutput(outputs):
 
 	for output in outputs:
 
+		singleResult = output['response']
+
 		try:
-			respCode = output['response_code']
+			respCode = singleResult['response_code']
 
 			# There's an error due to the limit being crossed or some other issue
-			if respCode == 204 or ("error" in output.keys()):
-				print(f"[-] ERROR: {output['error']}")
+			if respCode == 204 or ("error" in singleResult.keys()):
+				print(f"[-] ERROR: {singleResult['error']}")
 				return
 
 			# The hash isn't available on VT and needs manual scanning
-			elif respCode == 200 and (output['results']['response_code'] == 0):
+			elif respCode == 200 and (singleResult['results']['response_code'] == 0):
 				print(f"[-] The hash isn't available for searching on VT!")
 		
 			# The hash is available on VT and might be a positive
-			elif respCode == 200 and ("scans" in output['results'].keys()):
-				results = output['results']
+			elif respCode == 200 and ("scans" in singleResult['results'].keys()):
+				results = singleResult['results']
 				sha1Hash = results['sha1']
 				message = f'https://www.virustotal.com/gui/file/{sha1Hash}/detection'
 				result = {
-					'SHA1hash': results['sha1'],
-					'MD5hash': results['md5'],
-					'positives': results['positives'],
-					'total': results['total'],
-					'message': message
+					'File': output['file_name'],
+					'SHA-256 Hash': results['sha256'],
+					'SHA1 Hash': sha1Hash,
+					'MD5 Hash': results['md5'],
+					'Positives': results['positives'],
+					'Total': results['total'],
+					'Message': message
 				}
 				print(f"[+] Found a match! Check the output JSON file for more information.")
 
@@ -270,7 +279,7 @@ def processModes(args):
 	if mode == "hash":
 		processHashMode(args)
 	
-	elif mode == "scan":	
+	elif mode == "search":	
 		processVtMode(args['dir'], args['config'])
 	
 	elif mode == "both":
@@ -279,7 +288,7 @@ def processModes(args):
 
 def sanityCheck(args):
 	''' Check for the sanity of all arguments passed '''
-	possibleModes = ('hash', 'scan', 'both')
+	possibleModes = ('hash', 'search', 'both')
 
 	# Check if configuration file exists
 	if not (os.path.exists(args['config'])):
@@ -302,7 +311,7 @@ def parseArgs():
 	ap.add_argument("--dir", metavar="Directory to scan", required=True, help="Starting point (./)")
 	ap.add_argument("--config", metavar="Configuration file", default="config.ini", help="Configuration file for VT (config.ini)")
 	ap.add_argument("--algo", metavar="Algorithms to use", default="SHA256", help="Hashing algorithms [MD5, SHA1, SHA256*]")
-	ap.add_argument("--mode", metavar="Mode of operations [hash/scan/both]", required=True, help="Calculate hashes, scan hashes on VT, or both")
+	ap.add_argument("--mode", metavar="Mode of operations [hash/search/both]", required=True, help="Calculate hashes, search hashes on VT, or both")
 	args = vars(ap.parse_args())
 	return args
 

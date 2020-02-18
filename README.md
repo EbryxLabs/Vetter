@@ -49,20 +49,22 @@ python3 vetter.py -h
 
 Here's a list of commands you can use to get started with Vetter:
 ```
-D:\EbryxLabs\vetter-py>python vetter.py -h
-usage: vetter.py [-h] --dir Directory to scan [--config Configuration file] [--algo Algorithms to use] --mode Mode of
-                 operations [hash/scan/both]
+d:\EbryxLabs\vetter-py>python vetter.py -h
+
+usage: vetter.py [-h] --dir Directory to scan [--config Configuration file] [--algo Algorithms to use] [--filepath File to scan on VT] --mode Mode of operations [hash/search/scan/auto]
 
 optional arguments:
   -h, --help            show this help message and exit
   --dir Directory to scan
-                        Starting point (./)
+                        Starting point of files to hash or hashes to search on VT (./)
   --config Configuration file
                         Configuration file for VT (config.ini)
   --algo Algorithms to use
                         Hashing algorithms [MD5, SHA1, SHA256*]
-  --mode Mode of operations [hash/scan/both]
-                        Calculate hashes, scan hashes on VT, or both
+  --filepath File to scan on VT
+                        Scan the file on VT by using it's complete path {MAX SIZE: 32MB}
+  --mode Mode of operations [hash/search/scan/auto]
+                        Calculate hashes, search hashes, or scan a file on VT. 'auto' calculates hashes and searches them on VT
 
 ```
 
@@ -75,22 +77,26 @@ python vetter.py --dir ./ --mode hash
 
 2. You can search the calculated hashes or any of your own hash files against VirusTotal's APIs (it uses PublicAPIV3)
 ```
-python vetter.py --dir ./ --mode scan
+python vetter.py --dir ./ --mode search
 ```
 
-3. You can do both these steps at once using the "both" mode
+3. You can do both these steps at once using the "auto" mode
 ```
-python vetter.py --dir ./ --mode both
+python vetter.py --dir ./ --mode auto
 ```
 
 4. Specify the configuration file if you're not using the standard file provided with the script
 ```
-python vetter.py --dir ./ --mode both --config config-prod.ini
+python vetter.py --dir ./ --mode auto --config config-prod.ini
 ```
 
 5. Specify the hashing function you'd like to use by specifying it in a CSV format:
 ```
-python vetter.py --dir ./ --mode scan --algo md5,sha1
+python vetter.py --dir ./ --mode search --algo md5,sha1
+```
+6. If you wish to scan a file on VT, you can do it by selecting the 'scan' mode: {Please ensure a file of less than 32 MB!}
+```
+python vetter.py --dir ./ --mode scan --filepath ./Scripts/abc.ps1
 ```
 
 ## Tested

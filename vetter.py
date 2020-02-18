@@ -1,6 +1,7 @@
 '''
 Name: Vetter
 Description: Calculate hashes from a given directory and check against VT's databases
+Or, you can scan a file on VT and check it's output
 
 Author: Ebryx
 Version: 0.2
@@ -65,9 +66,10 @@ def saveHashes(hashes, mode):
 # VirusTotal Search
 
 def processVtMode(directory, config):
+	'''Starts up VT mode for searching hashes'''
 
 	vt = setupVt(config)
-	outputs = getSearchReports(vt, directory)
+	getSearchReports(vt, directory)
 
 def setupVt(config):
 	'''Initialize the VirusTotal Public API Object'''
@@ -118,6 +120,7 @@ def getSearchReports(vtObj, directory):
 					continue
 
 				# TODO: Add generator support! (or async calls for faster execution)
+				# TODO: Add support for batch reporting
 				response = vtObj.get_file_report(hash)
 				compResponse = {
 					'response': response,
@@ -186,7 +189,7 @@ def analyzeVtOutput(outputs):
 					'Total': results['total'],
 					'Message': message
 				}
-				print(f"[+] Found a match! Check the output JSON file for more information.")
+				print(f"[+] Found a match. Check the output JSON file for more information.")
 
 				vtResults.append(result)
 
@@ -269,6 +272,50 @@ def calculateHashes(hashingAlgos, files):
 			sha256 = 1
 			saveHashes(sha256hash, "sha256")
 
+# Scanner
+
+def processScanMode(config, filePath):
+	'''Setup scan mode by configuring API and then present report'''
+
+	vt = setupVt(config)
+	getScanReport(vt, filePath)
+
+def getScanReport(vtObj, filePath):
+	'''Scans the given file on VT'''
+
+	# TODO: Find existing reports on VT to save bandwidth
+	
+	results = vtObj.scan_file(filePath)
+	if results['response_code'] == 200:
+		scanReport = {
+			'File Path': filePath,
+			'scan_ID': results['results']['scan_id'],
+			'SHA1': results['results']['sha1'],
+			'SHA256': results['results']['sha256'],
+			'MD5': results['results']['md5'],
+			'Permalink': results['results']['permalink'],
+			'Message': results['results']['verbose_msg'],
+		}
+
+		# TODO: Write a mode to get the scanned report only (since new scans are queued only)
+		fileReport = vtObj.get_file_report(scanReport['scan_ID'])
+
+		fileOutput = json.dumps(fileReport, indent=4)
+		jsonOutput = json.dumps(scanReport, indent=4)
+		fileObj = open(f'vetter-scan-{currTime}.json', 'a+')
+		print(jsonOutput, file=fileObj)
+		print(fileOutput, file=fileObj)
+
+		print("[+] Successfully scanned the file and saved output in the current directory.")
+
+	elif results['response_code'] == 204:
+		print("[-] You've crossed your quota limits. Please wait for a minute to continue scanning")
+		exit()
+
+	else:
+		print("[-] Either the file is already scanned on VT or there's a different issue. Crash output: ")
+		print(results)
+	
 # General Calls
 
 def processModes(args):
@@ -282,13 +329,16 @@ def processModes(args):
 	elif mode == "search":	
 		processVtMode(args['dir'], args['config'])
 	
-	elif mode == "both":
+	elif mode == "scan":
+		processScanMode(args['config'], args['filepath'])
+	
+	elif mode == "auto":
 		processHashMode(args)
 		processVtMode(args['dir'], args['config'])
 
 def sanityCheck(args):
 	''' Check for the sanity of all arguments passed '''
-	possibleModes = ('hash', 'search', 'both')
+	possibleModes = ('hash', 'search', 'scan', 'auto')
 
 	# Check if configuration file exists
 	if not (os.path.exists(args['config'])):
@@ -297,7 +347,11 @@ def sanityCheck(args):
 
 	# Configure the right directory
 	elif not os.path.isdir(''+args['dir']):
-		print('[ERROR] Specified path does not exist')
+		print("[ERROR] Specified path does not exist. Issue: --dir ")
+		exit()
+
+	elif not os.path.isfile(args['filepath']):
+		print("[ERROR] Use the correct file path to scan. Issue: --filepath")
 		exit()
 
 	elif args['mode'] not in possibleModes:
@@ -308,10 +362,11 @@ def parseArgs():
 	''' Parse arguments from command line '''
 
 	ap = argparse.ArgumentParser()
-	ap.add_argument("--dir", metavar="Directory to scan", required=True, help="Starting point (./)")
+	ap.add_argument("--dir", metavar="Directory to scan", required=True, help="Starting point of files to hash or hashes to search on VT (./)")
 	ap.add_argument("--config", metavar="Configuration file", default="config.ini", help="Configuration file for VT (config.ini)")
 	ap.add_argument("--algo", metavar="Algorithms to use", default="SHA256", help="Hashing algorithms [MD5, SHA1, SHA256*]")
-	ap.add_argument("--mode", metavar="Mode of operations [hash/search/both]", required=True, help="Calculate hashes, search hashes on VT, or both")
+	ap.add_argument("--filepath", metavar="File to scan on VT", help="Scan the file on VT by using it's complete path {MAX SIZE: 32MB}")
+	ap.add_argument("--mode", metavar="Mode of operations [hash/search/scan/auto]", required=True, help="Calculate hashes, search hashes, or scan a file on VT. 'auto' calculates hashes and searches them on VT")
 	args = vars(ap.parse_args())
 	return args
 

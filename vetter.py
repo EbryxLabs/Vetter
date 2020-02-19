@@ -350,9 +350,10 @@ def sanityCheck(args):
 		print("[ERROR] Specified path does not exist. Issue: --dir ")
 		exit()
 
-	elif not os.path.isfile(args['filepath']):
-		print("[ERROR] Use the correct file path to scan. Issue: --filepath")
-		exit()
+	elif args['mode']=="scan":
+		if not os.path.isfile(args['filepath']):
+			print("[ERROR] Use the correct file path to scan. Issue: --filepath")
+			exit()
 
 	elif args['mode'] not in possibleModes:
 		print('[ERROR] Wrong mode selected!')

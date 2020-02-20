@@ -27,12 +27,12 @@ currTime = currTime.strftime("%d-%m-%Y_%H%M%S")
 
 # Helper Functions
 
-def saveVtResults(vtResults):
+def saveVtResults(vtResults, mode):
 	''' Stores VT's results in a file in the same directory '''
 
 	for result in vtResults:
 		jsonResult = json.dumps(result, indent=4)
-		fileObj = open(f'vetter-results-{currTime}.json', 'a+')
+		fileObj = open(f'vetter-{mode}-{currTime}.json', 'a+')
 		print(jsonResult, file=fileObj)
 
 def getFiles(directory):
@@ -157,6 +157,7 @@ def getHashFiles(directory, extensions):
 def analyzeVtOutput(outputs):
 
 	vtResults = []
+	noVtResultsAvailable = []
 	vtLink = "https://https://www.virustotal.com/gui/file/"
 
 	for output in outputs:
@@ -173,7 +174,8 @@ def analyzeVtOutput(outputs):
 
 			# The hash isn't available on VT and needs manual scanning
 			elif respCode == 200 and (singleResult['results']['response_code'] == 0):
-				print(f"[-] The hash isn't available for searching on VT!")
+				print(f"[-] The hash isn't available for searching on VT. Check the 'manual-scan' file for more information.")
+				noVtResultsAvailable.append(output['file_name'])
 		
 			# The hash is available on VT and might be a positive
 			elif respCode == 200 and ("scans" in singleResult['results'].keys()):
@@ -189,7 +191,7 @@ def analyzeVtOutput(outputs):
 					'Total': results['total'],
 					'Message': message
 				}
-				print(f"[+] Found a match. Check the output JSON file for more information.")
+				print(f"[+] Found a match. Positives: {result['Positives']} out of {result['Total']}")
 
 				vtResults.append(result)
 
@@ -204,7 +206,11 @@ def analyzeVtOutput(outputs):
 				print(e)
 
 	if vtResults is not []:
-		saveVtResults(vtResults)
+		saveVtResults(vtResults, mode='results')
+	
+	if noVtResultsAvailable is not []:
+		saveVtResults(noVtResultsAvailable, mode='manual-search')
+		
 
 # Hashing
 
